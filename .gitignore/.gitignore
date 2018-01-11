@@ -1,0 +1,7 @@
+*.qmlc
+*.jsc
+Makefile*
+debug/*
+release/*
+.qmake.stash
+fusion-splicer-app.pro.user
