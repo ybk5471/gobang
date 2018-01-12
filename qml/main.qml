@@ -10,6 +10,7 @@ ApplicationWindow {
 	property bool isRunning: false
 	property bool isBP: false
 	property var order: []
+	property var situation: initSituation()
 	property int orderLength: order.length
 	property int undoTimes: 10
 	property int hintTimes: 10
