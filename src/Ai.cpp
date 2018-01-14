@@ -75,66 +75,135 @@ int Ai::think(bool isAi, int deep, const QList<int> & situation) {
 		}
 	}
 
-	best_idx = max(isAi, deep);
+	int best_score;
+
+	best_idx = max(isAi, deep, best_score);
 
 	return best_idx;
 }
 
-int Ai::max(bool isAi, int deep) {
-	if (deep == 0) return -1;
+int Ai::max(bool isAi, int deep, int & score) {
 	deep = deep - 1;
 	QList<int> max_best_idx_list;
-	int best_idx = -1
+	int best_index = -1
 	int best_score = -1;
 	for (int r = 0; r < m_boardSize; ++r) {
 		for (int l = 0; l < m_boardSize; ++l) {
-			if (!setData(r, l, isAi)) {
+			if (!setData(isAi, r, l)) {
 				resetData(r, l);
 				continue;
 			}
 			int tmp = -1;
-			tmp = score(m_row) + score(m_col) + score(m_slash) + score(m_backslash);
+			tmp = calScore(m_row) + calScore(m_col) + calScore(m_slash) + calScore(m_backslash);
 			if (best_score < tmp) {
 				max_best_idx_list.clear();
 				best_score = tmp;
-				best_idx = r * m_boardSize + l;
+				best_index = r * m_boardSize + l;
 			} else if (best_score == tmp) {
-				max_best_idx_list.append(best_idx);
+				max_best_idx_list.append(best_index);
 				best_index = r * m_boardSize + l;
 			}
 			resetData(r, l);
 		}
 	}
 
+	if (deep == 1) {
+		score = best_score;
+		return best_index;
+	}
+
 	int min_score = 10000;
-	QList<int> min_best_idx_list;
+	int mscore;
+	int min_score_index;
 	if (max_best_idx_list.count() != 0) {
 		for (var i = 0; i < max_best_idx_list.count(); ++i) {
 			int r = max_best_idx_list[i] / m_boardSize;
 			int l = max_best_idx_list[i] % m_boardSize;
-			setData(r, l);
-			int mscore = min(isAi, int deep);
-			if (mscore < min_score) {
-				same_min_score_idx.clear();
+			setData(isAi, r, l);
+			min(isAi, deep, mscore);
+			if (mscore <= min_score) {
 				min_score = mscore;
-			} else if (mscore = min_score) {
-				same_min_score_idx.append(max_best_idx_list[i])
+				min_score_index = max_best_idx_list[i];
 			}
 			resetData(r, l);
 		}
-		if (same_min_score_idx.count() != 0) {
-			return same_min_score_idx[0];
-		}
 	}
-	return best_idx;
+	setData(isAi, best_index / m_boardSize, best_index % m_boardSize);
+	min(isAi, deep, mscore);
+	score = best_score;
+	if (mscore < min_score) {
+		return best_index;
+	} else {
+		return min_score_index;
+	}
 
 }
-int Ai::min(bool isAi, int deep) {
 
+int Ai::min(bool isAi, int deep, int & score) {
+	deep = deep - 1;
+	QList<int> min_best_idx_list;
+	int best_index = -1;
+	int best_score = 10000;
+	for (int r = 0; r < m_boardSize; ++r) {
+		for (int l = 0; l < m_boardSize; ++l) {
+			if (!setData(!isAi, r, l)) {
+				resetData(r, l);
+				continue;
+			}
+			int tmp = -1;
+			tmp = calScore(m_row) + calScore(m_col) + calScore(m_slash) + calScore(m_backslash);
+			if (tmp < best_score) {
+				min_best_idx_list.clear();
+				best_score = tmp;
+				best_index = r * m_boardSize + l;
+			} else if (tmp = best_score) {
+				min_best_idx_list.push(best_index);
+				best_index = r * m_boardSize + l;
+			}
+			resetData(r, l);
+		}
+	}
+
+	if (deep == 1) {
+		score = best_score;
+		return best_index;
+	}
+
+	int max_score = -1;
+	int mscore;
+	int max_score_index;
+	if (min_best_idx_list.count() != 0) {
+		for (var i = 0; i < min_best_idx_list.count(); ++i) {
+			int r = min_best_idx_list[i] / m_boardSize;
+			int l = min_best_idx_list[i] % m_boardSize;
+			setData(!isAi, r, l);
+			max(isAi, deep, mscore);
+			if (mscore >= max_score) {
+				max_score = mscore;
+				max_score_index = min_best_idx_list[i];
+			}
+			resetData(r, l);
+		}
+	}
+	setData(!isAi, best_index / m_boardSize, best_index % m_boardSize);
+	min(isAi, deep, mscore);
+	score = best_score;
+	if (mscore < max_score) {
+		return best_index;
+	} else {
+		return max_score_index;
+	}
+}
+
+int calScore(bool isAi, const QList<QList<int>> & data) const {
+	int value = isAi ? 1 : 2;
+	for (int i = 0; i < data.count(); ++i) {
+
+	}
 }
 
 bool Ai::setData(bool isAi, int r, int l) {
-	int value = isAi ? 1 : 0;
+	int value = isAi ? 1 : 2;
 	if (m_situation[r][l] == 0) {
 		m_situation[r][l] = value;
 	} else {
