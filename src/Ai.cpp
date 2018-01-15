@@ -17,7 +17,7 @@ int Ai::think(bool isAi, int deep, const QList<int> & situation) {
 	QList<int> bs;
 
 	int best_idx = -1;
-// 	int m = 0;
+	int m = 0;
 	//横
 	for(int r = 0; r < m_boardSize; ++r) {
 		sr.clear();
@@ -79,7 +79,7 @@ int Ai::think(bool isAi, int deep, const QList<int> & situation) {
 // 	}
 	//反斜
 	for (int r = m_boardSize - 1, k = m_boardSize - 1; k >= -(m_boardSize - 1); --k) {
-		ss.clear();
+		bs.clear();
 		if (r > 0) {
 			--r;
 		}
@@ -88,10 +88,15 @@ int Ai::think(bool isAi, int deep, const QList<int> & situation) {
 			if (l >  m_boardSize - 1) {
 				break;
 			}
-			ss.append(situation[rt * m_boardSize + l]);
+			bs.append(situation[rt * m_boardSize + l]);
 		}
-		if (ss.count() >= 5) {
-			m_slash.append(ss);
+				m++;
+		qDebug() << "backslash index: " << m;
+// 		for (int n = 0; n < sr.count(); ++n) {
+// 			qDebug() << sr[n];
+// 		}
+		if (bs.count() >= 5) {
+			m_backslash.append(bs);
 		}
 	}
 // 	for (int l = 0; l < m_boardSize; ++l) {
@@ -130,11 +135,15 @@ int Ai::max(bool isAi, int deep, int & score) {
 	int best_score = -1;
 	for (int r = 0; r < m_boardSize; ++r) {
 		for (int l = 0; l < m_boardSize; ++l) {
+			qDebug() << "1111111";
 			if (!setData(isAi, r, l)) {
+				qDebug() << "2222222";
 				continue;
 			}
+			qDebug() << "3333333";
 			int tmp = -1;
 			tmp = calScore(isAi, m_row) + calScore(isAi, m_col) + calScore(isAi, m_slash) + calScore(isAi, m_backslash);
+			qDebug() << "4444444";
 			if (best_score < tmp) {
 				max_best_idx_list.clear();
 				best_score = tmp;
@@ -143,7 +152,9 @@ int Ai::max(bool isAi, int deep, int & score) {
 				max_best_idx_list.append(best_index);
 				best_index = r * m_boardSize + l;
 			}
+			qDebug() << "5555555";
 			resetData(r, l);
+			qDebug() << "6666666";
 		}
 	}
 
@@ -298,7 +309,7 @@ int Ai::metaScore(bool isAi, const QList<int> & mData) const {
 	d5 = aresult % 10;
 
 	score = a1 * 1 + a2 * 2 + a3 * 4 + a4 * 8 + a5 * 16 + d1 * 0 + d2 * 1 + d3 * 2 + d4 * 4  + d5 * 16;
-	qDebug() << "score: " << score;
+// 	qDebug() << "score: " << score;
 	return score;
 }
 
@@ -331,7 +342,10 @@ bool Ai::setData(bool isAi, int r, int l) {
 		}
 	}
 	if (-(r - l - m_boardSize) - 4 >= 0) {
+		qDebug() << "7777777";
+		qDebug() << -(r - l - m_boardSize) - 4;
 		if (0 == m_backslash[-(r - l - m_boardSize) - 4][l]) {
+			qDebug() << "8888888";
 			m_backslash[-(r - l - m_boardSize) - 4][l] = value;
 		} else {
 			qDebug() << "set backslash data error!!!!!";
