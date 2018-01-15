@@ -16,6 +16,7 @@ private:
 	int max(bool isAi, int deep, int & score);
 	int min(bool isAi, int deep, int & score);
 	int calScore(bool isAi, const QList<QList<int>> & data) const;
+	int metaScore(bool isAi, const QList<int> & mData) const;
 	bool setData(bool isAi, int r, int l);
 	bool resetData(int r, int l);
 private:
