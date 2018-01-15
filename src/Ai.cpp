@@ -1,11 +1,13 @@
 #include <cmath>
-#include "Ai.hpp"
+#include <QDebug>
+#include "../include/Ai.hpp"
 
-Ai::Ai(QObject * parent) : QObject(parent {}
+Ai::Ai(QObject * parent) : QObject(parent) {}
 
 Ai::~Ai() {}
 
 int Ai::think(bool isAi, int deep, const QList<int> & situation) {
+	qDebug() << "m_boardSize: " << m_boardSize;
 
 	m_situation = situation;
 
@@ -15,66 +17,104 @@ int Ai::think(bool isAi, int deep, const QList<int> & situation) {
 	QList<int> bs;
 
 	int best_idx = -1;
+// 	int m = 0;
 	//横
-	for(int r = 0; r < m_boardSize - 1; ++r) {
+	for(int r = 0; r < m_boardSize; ++r) {
 		sr.clear();
-		for (int l = 0; l < m_boardSize - 1; ++l) {
+		for (int l = 0; l < m_boardSize; ++l) {
 			sr.append(situation[r * m_boardSize + l]);
 		}
+// 		m++;
+// 		qDebug() << "row index: " << m;
+// 		for (int n = 0; n < sr.count(); ++n) {
+// 			qDebug() << sr[n];
+// 		}
 		m_row.append(sr);
 	}
 	//竖
-	for(int l = 0; l < m_boardSize - 1; ++l) {
+	for(int l = 0; l < m_boardSize; ++l) {
 		sc.clear();
-		for (int r = 0; r < m_boardSize - 1; ++r) {
+		for (int r = 0; r < m_boardSize; ++r) {
 			sc.append(situation[r * m_boardSize + l]);
 		}
 		m_col.append(sc);
 	}
 	//斜
-	for (int r = 0; r < m_boardSize - 1; ++r) {
+	for (int r =0, k = 0; k <= (m_boardSize - 1) * 2; ++k) {
 		ss.clear();
-		int tr = r;
-		for (int ll = 0; tr >= 0; ++ll, --tr) {
-			ss.append(situation[tr * m_boardSize + ll]);
+		if (r < m_boardSize - 1) {
+			++r;
 		}
-		if (ss.count >= 5) {
-			m_slash.append(ss);
-		}
-		ss.clear();
-		tr = r;
-		for (int rl = m_boardSize - 1; tr < m_boardSize; --rl, ++tr) {
-			ifmax (rl + tr == m_boardSize - 1) {
-				continue;
+		for (int rt  = r; rt >= 0; --rt) {
+			int l = k - rt;
+			if (l > m_boardSize - 1) {
+				break;
 			}
-			ss.append(situation[tr * m_boardSize + rl]);
+			ss.append(situation[rt * m_boardSize + l]);
 		}
-		if (ss.count >= 5) {
+		if (ss.count() >= 5) {
 			m_slash.append(ss);
 		}
 	}
+// 	for (int r = 0; r < m_boardSize; ++r) {
+// 		ss.clear();
+// 		int tr = r;
+// 		for (int ll = 0; tr >= 0; ++ll, --tr) {
+// 			ss.append(situation[tr * m_boardSize + ll]);
+// 		}
+// 		if (ss.count() >= 5) {
+// 			m_slash.append(ss);
+// 		}
+// 		ss.clear();
+// 		tr = r;
+// 		for (int rl = m_boardSize - 1; tr < m_boardSize; --rl, ++tr) {
+// 			if (rl + tr == m_boardSize) {
+// 				continue;
+// 			}
+// 			ss.append(situation[tr * m_boardSize + rl]);
+// 		}
+// 		if (ss.count() >= 5) {
+// 			m_slash.append(ss);
+// 		}
+// 	}
 	//反斜
-	for (int l = 0; l < m_boardSize - 1; ++l) {
-		bs.clear();
-		int tl = l;
-		for (int lr = m_boardSize - 1; tl > 0; --lr, --tl) {
-			bs.append(situation[lr* m_boardSize + tl]);
+	for (int r = m_boardSize - 1, k = m_boardSize - 1; k >= -(m_boardSize - 1); --k) {
+		ss.clear();
+		if (r > 0) {
+			--r;
 		}
-		if (bs.count >= 5) {
-			m_backslash.append(bs);
-		}
-		bs.clear();
-		tl = l;
-		for (int rr = 0; tl < m_boardSize; ++rr, ++tl) {
-			if (rr == tl) {
-				continue;
+		for (int rt  = r; rt <= m_boardSize - 1; ++rt) {
+			int l = rt - k;
+			if (l >  m_boardSize - 1) {
+				break;
 			}
-			bs.append(situation[rr * m_boardSize + tl]);
+			ss.append(situation[rt * m_boardSize + l]);
 		}
-		if (bs.count >= 5) {
-			m_backslash.append(bs);
+		if (ss.count() >= 5) {
+			m_slash.append(ss);
 		}
 	}
+// 	for (int l = 0; l < m_boardSize; ++l) {
+// 		bs.clear();
+// 		int tl = l;
+// 		for (int lr = m_boardSize - 1; tl > 0; --lr, --tl) {
+// 			bs.append(situation[lr* m_boardSize + tl]);
+// 		}
+// 		if (bs.count() >= 5) {
+// 			m_backslash.append(bs);
+// 		}
+// 		bs.clear();
+// 		tl = l;
+// 		for (int rr = 0; tl < m_boardSize; ++rr, ++tl) {
+// 			if (rr == tl) {
+// 				continue;
+// 			}
+// 			bs.append(situation[rr * m_boardSize + tl]);
+// 		}
+// 		if (bs.count() >= 5) {
+// 			m_backslash.append(bs);
+// 		}
+// 	}
 
 	int best_score;
 
@@ -86,16 +126,15 @@ int Ai::think(bool isAi, int deep, const QList<int> & situation) {
 int Ai::max(bool isAi, int deep, int & score) {
 	deep = deep - 1;
 	QList<int> max_best_idx_list;
-	int best_index = -1
+	int best_index = -1;
 	int best_score = -1;
 	for (int r = 0; r < m_boardSize; ++r) {
 		for (int l = 0; l < m_boardSize; ++l) {
 			if (!setData(isAi, r, l)) {
-				resetData(r, l);
 				continue;
 			}
 			int tmp = -1;
-			tmp = calScore(m_row) + calScore(m_col) + calScore(m_slash) + calScore(m_backslash);
+			tmp = calScore(isAi, m_row) + calScore(isAi, m_col) + calScore(isAi, m_slash) + calScore(isAi, m_backslash);
 			if (best_score < tmp) {
 				max_best_idx_list.clear();
 				best_score = tmp;
@@ -115,9 +154,9 @@ int Ai::max(bool isAi, int deep, int & score) {
 
 	int min_score = 10000;
 	int mscore;
-	int min_score_index;
+	int min_score_index = -1;
 	if (max_best_idx_list.count() != 0) {
-		for (var i = 0; i < max_best_idx_list.count(); ++i) {
+		for (int i = 0; i < max_best_idx_list.count(); ++i) {
 			int r = max_best_idx_list[i] / m_boardSize;
 			int l = max_best_idx_list[i] % m_boardSize;
 			setData(isAi, r, l);
@@ -148,11 +187,10 @@ int Ai::min(bool isAi, int deep, int & score) {
 	for (int r = 0; r < m_boardSize; ++r) {
 		for (int l = 0; l < m_boardSize; ++l) {
 			if (!setData(!isAi, r, l)) {
-				resetData(r, l);
 				continue;
 			}
 			int tmp = -1;
-			tmp = calScore(m_row) + calScore(m_col) + calScore(m_slash) + calScore(m_backslash);
+			tmp = calScore(!isAi, m_row) + calScore(!isAi, m_col) + calScore(!isAi, m_slash) + calScore(!isAi, m_backslash);
 			if (tmp < best_score) {
 				min_best_idx_list.clear();
 				best_score = tmp;
@@ -172,9 +210,9 @@ int Ai::min(bool isAi, int deep, int & score) {
 
 	int max_score = -1;
 	int mscore;
-	int max_score_index;
+	int max_score_index = -1;
 	if (min_best_idx_list.count() != 0) {
-		for (var i = 0; i < min_best_idx_list.count(); ++i) {
+		for (int i = 0; i < min_best_idx_list.count(); ++i) {
 			int r = min_best_idx_list[i] / m_boardSize;
 			int l = min_best_idx_list[i] % m_boardSize;
 			setData(!isAi, r, l);
@@ -196,46 +234,37 @@ int Ai::min(bool isAi, int deep, int & score) {
 	}
 }
 
-int calScore(bool isAi, const QList<QList<int>> & data) const {
+int Ai::calScore(bool isAi, const QList<QList<int>> & data) const {
 	int score = 0;
 	for (int i = 0; i < data.count(); ++i) {
 		const auto & d = data[i];
 		score += metaScore(isAi, d);
 	}
-	return score
+	return score;
 }
 
-int int metaScore(bool isAi, const QList<int> & mData) const {
+int Ai::metaScore(bool isAi, const QList<int> & mData) const {
 	int score = 0;
 	const int value = isAi ? 1 : 2;
 	const int againstValue = isAi ? 2 : 1;
 
-// 	int zeros = 0;
-// 	int firstZerosIdx = -1;
-// 	int lastAgainstValueIdx = -1;
-// 	int againstValueIdx = -1;
-// 	QList<QList<int>> valueIdxList = -1;
-// 	int beginZeroIdx = -1;
-// 	int endZeroIdx = -1;
-// 	bool hasSpaceRepeat = false;
-// 	int spaceNum = 0;
 	int repeatValueCount = 0;
 	long aresult = 0;
 	long dresult = 0;
 
-	int a1 = 0, a2 = 0, a3 = 0, a4 = 0, a5 = 0, d1 = 0, d2 = 0, d3 = 0, d4 = 0;
+	int a1 = 0, a2 = 0, a3 = 0, a4 = 0, a5 = 0, d1 = 0, d2 = 0, d3 = 0, d4 = 0, d5 = 0;
 
-	for (int i = 0; i < mData.count();) {
+	for (int i = 0; i < mData.count(); ++i) {
 		if (value == mData[i]) {
 			repeatValueCount += 1;
 		} else if (againstValue == mData[i]) {
-			if (0 != repeatValueCount && 0 i != repeatValue && 0 == mData[i - repeatValueCount - 1]) {
+			if (0 != repeatValueCount && 0 != i && 0 == mData[i - repeatValueCount - 1]) {
 				dresult += std::pow(10, repeatValueCount - 1);
 			}
 			repeatValueCount = 0;
 		} else if (0 == mData[i] && 0 == mData[i + 1]) {
 			if (0 != repeatValueCount) {
-				if (i == repeatValue || againstValue == mData[i - repeatValueCount - 1]) {
+				if (i == repeatValueCount || againstValue == mData[i - repeatValueCount - 1]) {
 					dresult += std::pow(10, repeatValueCount - 1);
 				} else if (0 == mData[i - repeatValueCount - 1]) {
 					aresult += std::pow(10, repeatValueCount - 1);
@@ -243,103 +272,42 @@ int int metaScore(bool isAi, const QList<int> & mData) const {
 			}
 			repeatValueCount = 0;
 		} else if (0 == mData[i] && 0 != mData[i + 1]) {
-			for (int i = k)
-		}
-// 		QList<int> tmp;
-// 		tmp.append(-1);
-// 		if (againstValue = mData[i]) {
-// 			valueIdxList.append(tmp);
-// 			tmp.clear();
-// 			tmp.append(i);
-// // 			zerosIdx = -1
-// // 			if (-1 == lastAgainstValueIdx) {
-// // 				lastAgainstValueIdx = i;
-// // 			} else {
-// // 				lastAgainstValueIdx = againstValueIdx;
-// // 				againstValueIdx = i;
-// // 			}
-// 		} else if (value == mData[i]) {
-// 			tmp.append(i)
-// 		}
-// 		zeros = 0;
-// 		if (value != mData[i]) {
-// 			++i;
-// 			continue;
-// 		}
-// 		int limit = i + 5 > mData.count() ? mData.count() - i : 5;
-// 		int k;
-// 		for (k = 1; k < limit; ++k) {
-// 			if (againstValue == mData[i + k]) {
-// 				i += (k + 1);
-// 				if (0 == i || againstValue == mData[i - 1]) {
-// 					break;
-// 				} else {
-// 					if (0 == zeros) {
-// 						dresult += std::pow(10, k - 1);
-// 					} else if (1 == zeros) {
-// 						if (value == mData[i + k - 1]) {
-// 							dresult += std::pow(10, k - zeros - 1);
-// 						} else {
-// 							aresult += std::pow(10, k  - zeros - 1);
-// 						}
-// 					} else if (2 == zeros) {
-// 						if (value == mData[i + 1]) {
-// 							aresult += std::pow(10, 1); //..oox
-// 						} else if (value == mData[i + 2]) { //.o.ox
-// 							aresult += std::pow(10, 0) * 2;
-// 						} else if (value == mData[i + 3]) { //.oo.x
-// 							aresult += std::pow(10, 0);
-// 							dresult += std::pow(10, 0);
-// 						} else { //.oox
-// 							aresult =+ std::pow(10, 0);
-// 						}
-// 					} else if (3 == zeros) {
-// 						aresult += std::pow(10, 0);
-// 					}
-// 					break;
-// 				}
-// 			}
-// 			if (0 == mData[i + k]) {
-// 				++zeros;
-// 				if (1 == zeros) {
-// 					firstZerosIdx = k;
-// 				}
-// 			}
-// 		}
-// 		if (k = limit - 1) {
-// 			if (4 == zeros) { //.oooo
-// 				aresult += std::pow(10, 0);
-// 			} else if (3 == zeros) {
-//
-// 			} else if (2 == zeros) {
-//
-// 			} else if (1 == zeros) {
-// 				if (limit < 5 || againstValue == mData[limit]) {
-// 					aresult += std::pow(10, firstZerosIdx - 1);
-// 					dresult += std::pow(10, limit - )
-// 				}
-// 			}
-// 		}
-	}
-
-	for (int i = 0; i < valueIdxList.count(); ++i) {
-		const auto ele = valueIdxList[i];
-		bool repeatZero = false;
-		int repeatValueCount = 1
-		for (int k = 1; k < ele.count(); ++k) {
-			if (ele[k] - ele[0])
+			for (int k = 0; k < mData.count() - i; ++i) {
+				int rv = 0;
+				if (value == mData[i + k]) {
+					++rv;
+				} else if (againstValue == mData[i + k]) {
+					break;
+				} else if (0 == mData[i + k]) {
+					dresult += std::pow(10, rv - 1);
+					break;
+				}
+			}
 		}
 	}
 
-	score = a1 * 1 + a2 * 2 + a3 * 4 + a4 * 8 + a5 * 16 + d1 * 0 + d2 * 1 + d3 * 2 + d4 * 4;
+	a1 = aresult % 100000;
+	a2 = aresult % 10000;
+	a3 = aresult % 1000;
+	a4 = aresult % 100;
+	a5 = aresult % 10;
+	d1 = aresult % 100000;
+	d2 = aresult % 10000;
+	d3 = aresult % 1000;
+	d4 = aresult % 100;
+	d5 = aresult % 10;
+
+	score = a1 * 1 + a2 * 2 + a3 * 4 + a4 * 8 + a5 * 16 + d1 * 0 + d2 * 1 + d3 * 2 + d4 * 4  + d5 * 16;
+	qDebug() << "score: " << score;
 	return score;
 }
 
 bool Ai::setData(bool isAi, int r, int l) {
 	int value = isAi ? 1 : 2;
-	if (0 == m_situation[r][l]) {
-		m_situation[r][l] = value;
+	if (0 == m_situation[r * m_boardSize + l]) {
+		m_situation[r * m_boardSize + l] = value;
 	} else {
+		qDebug() << "is not zero!!!!!!!";
 		return false;
 	}
 	if (0 == m_row[r][l]) {
@@ -354,24 +322,28 @@ bool Ai::setData(bool isAi, int r, int l) {
 		qDebug() << "set row data error!!!!!";
 		return false;
 	}
-	if (0 == m_slash[r + l - 5][l]) {
-		m_slash[r + l - 5][l] = value;
-	} else {
-		qDebug() << "set slash data error!!!!!";
-		return false;
+	if (r + l - 4 >= 0) {
+		if (0 == m_slash[r + l - 4][l]) {
+			m_slash[r + l - 4][l] = value;
+		} else {
+			qDebug() << "set slash data error!!!!!";
+			return false;
+		}
 	}
-	if (0 == m_backslash[r + l - 5][r]) {
-		m_backslash[r + l - 5][r] = value;
-	} else {
-		qDebug() << "set backslash data error!!!!!"
-		return false;
+	if (-(r - l - m_boardSize) - 4 >= 0) {
+		if (0 == m_backslash[-(r - l - m_boardSize) - 4][l]) {
+			m_backslash[-(r - l - m_boardSize) - 4][l] = value;
+		} else {
+			qDebug() << "set backslash data error!!!!!";
+			return false;
+		}
 	}
 	return true;
 }
 
 bool Ai::resetData(int r, int l) {
-	if (m_situation[r][l] != 0) {
-		m_situation[r][l] = 0;
+	if (m_situation[r * m_boardSize + l] != 0) {
+		m_situation[r * m_boardSize + l] = 0;
 	} else {
 		return false;
 	}
@@ -387,17 +359,21 @@ bool Ai::resetData(int r, int l) {
 		qDebug() << "reset row data error!!!!!";
 		return false;
 	}
-	if (m_slash[r + l - 5][l] != 0) {
-		m_slash[r + l - 5][l] = 0;
-	} else {
-		qDebug() << "reset slash data error!!!!!";
-		return false;
+	if (r + l - 4 >= 0) {
+		if (m_slash[r + l - 4][l] != 0) {
+			m_slash[r + l - 4][l] = 0;
+		} else {
+			qDebug() << "reset slash data error!!!!!";
+			return false;
+		}
 	}
-	if (m_backslash[r + l - 5][r] != 0) {
-		m_backslash[r + l - 5][r] = 0;
-	} else {
-		qDebug() << "reset backslash data error!!!!!"
-		return false;
+	if (-(r - l - m_boardSize) - 4 >= 0) {
+		if (m_backslash[-(r - l - m_boardSize) - 4][l] != 0) {
+			m_backslash[-(r - l - m_boardSize) - 4][l] = 0;
+		} else {
+			qDebug() << "reset backslash data error!!!!!";
+			return false;
+		}
 	}
 	return true;
 }

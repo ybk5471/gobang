@@ -8,9 +8,9 @@ ApplicationWindow {
 	height: width + header.height + footer.height
 
 	property bool isRunning: false
-	property bool isBP: false
+	property bool isAi: false
 	property var order: []
-	property var situation: initSituation()
+	property var situation: getSituation()
 	property int orderLength: order.length
 	property int undoTimes: 10
 	property int hintTimes: 10
@@ -68,25 +68,51 @@ ApplicationWindow {
 			centerV:	centerv
 			chessmanV:	chessmanv
 			buttonV:	isRunning
-			onTriggered: genClr()
+			onTriggered: {
+				genClr()
+				if (!isAi) {
+					aiPlay()
+				}
+			}
 
 			function genClr() {
 				changeUser()
 				order.push(index)
 				++orderLength
-				if (isBP) {
+				if (isAi) {
 					chessmanC = "black"
-					user = "bp"
+					user = "ai"
 				} else {
 					chessmanC = "white"
-					user = "wp"
+					user = "hu"
 				}
 				chessmanv = true
 			}
 		}
 	}
 
-	function aiPlay(r, l) {
+	function getSituation() {
+		var tmp = []
+		for (var i = 0; i < myModel.count; ++i) {
+			var ele = myModel.get(i)
+			if ("null" == ele.user) {
+				tmp.push(0)
+			} else if ("ai" == ele.user) {
+				tmp.push(1)
+			} else {
+				tmp.push(2)
+			}
+		}
+		return tmp
+	}
+
+	function aiPlay() {
+		Ai.boardSize = uiCfg.boardSize
+		var bestIdx = Ai.think(!isAi, 2, situation)
+		aiChess(parseInt(bestIdx / uiCfg.boardSize), bestIdx % uiCfg.boardSize)
+	}
+
+	function aiChess(r, l) {
 		board.currentIndex = r * uiCfg.boardSize + l
 		board.currentItem.click()
 	}
@@ -94,7 +120,7 @@ ApplicationWindow {
 	function go() {
 		isRunning = true
 		initBoard()
-		aiPlay(parseInt(uiCfg.boardSize / 2), parseInt(uiCfg.boardSize / 2))
+		aiChess(parseInt(uiCfg.boardSize / 2), parseInt(uiCfg.boardSize / 2))
 	}
 
 	function getHint() {
@@ -112,11 +138,11 @@ ApplicationWindow {
 	}
 
 	function changeUser() {
-		isBP = !isBP
+		isAi = !isAi
 	}
 
 	function initBoard() {
-		isBP = false
+		isAi = false
 		order.splice(0, order.length)
 		myModel.clear()
 		for (var r = 0; r < uiCfg.boardSize; ++r) {
