@@ -7,8 +7,6 @@ Ai::Ai(QObject * parent) : QObject(parent) {}
 Ai::~Ai() {}
 
 int Ai::think(bool isAi, int deep, const QList<int> & situation) {
-	qDebug() << "m_boardSize: " << m_boardSize;
-
 	m_situation = situation;
 
 	QList<int> sr;
@@ -17,18 +15,12 @@ int Ai::think(bool isAi, int deep, const QList<int> & situation) {
 	QList<int> bs;
 
 	int best_idx = -1;
-	int m = 0;
 	//横
 	for(int r = 0; r < m_boardSize; ++r) {
 		sr.clear();
 		for (int l = 0; l < m_boardSize; ++l) {
 			sr.append(situation[r * m_boardSize + l]);
 		}
-// 		m++;
-// 		qDebug() << "row index: " << m;
-// 		for (int n = 0; n < sr.count(); ++n) {
-// 			qDebug() << sr[n];
-// 		}
 		m_row.append(sr);
 	}
 	//竖
@@ -90,11 +82,6 @@ int Ai::think(bool isAi, int deep, const QList<int> & situation) {
 			}
 			bs.append(situation[rt * m_boardSize + l]);
 		}
-				m++;
-		qDebug() << "backslash index: " << m;
-// 		for (int n = 0; n < sr.count(); ++n) {
-// 			qDebug() << sr[n];
-// 		}
 		if (bs.count() >= 5) {
 			m_backslash.append(bs);
 		}
@@ -135,15 +122,11 @@ int Ai::max(bool isAi, int deep, int & score) {
 	int best_score = -1;
 	for (int r = 0; r < m_boardSize; ++r) {
 		for (int l = 0; l < m_boardSize; ++l) {
-			qDebug() << "1111111";
 			if (!setData(isAi, r, l)) {
-				qDebug() << "2222222";
 				continue;
 			}
-			qDebug() << "3333333";
 			int tmp = -1;
 			tmp = calScore(isAi, m_row) + calScore(isAi, m_col) + calScore(isAi, m_slash) + calScore(isAi, m_backslash);
-			qDebug() << "4444444";
 			if (best_score < tmp) {
 				max_best_idx_list.clear();
 				best_score = tmp;
@@ -152,9 +135,7 @@ int Ai::max(bool isAi, int deep, int & score) {
 				max_best_idx_list.append(best_index);
 				best_index = r * m_boardSize + l;
 			}
-			qDebug() << "5555555";
 			resetData(r, l);
-			qDebug() << "6666666";
 		}
 	}
 
@@ -318,37 +299,38 @@ bool Ai::setData(bool isAi, int r, int l) {
 	if (0 == m_situation[r * m_boardSize + l]) {
 		m_situation[r * m_boardSize + l] = value;
 	} else {
-		qDebug() << "is not zero!!!!!!!";
+		qDebug() << "is not zero: " << r << ", col: " << l << "svalue: " << m_situation[r * m_boardSize + l];
 		return false;
 	}
 	if (0 == m_row[r][l]) {
 		m_row[r][l] = value;
 	} else {
-		qDebug() << "set row data error!!!!!";
+		qDebug() << "set row data error: " << r << ", col: " << l << ", value: " << m_row[r][l] << "svalue: " << m_situation[r * m_boardSize + l];
 		return false;
 	}
 	if (0 == m_col[l][r]) {
 		m_col[l][r] = value;
 	} else {
-		qDebug() << "set row data error!!!!!";
+		qDebug() << "set row data error: " << r << ", col: " << l << ", value: " << m_col[l][r] << "svalue: " << m_situation[r * m_boardSize + l];
 		return false;
 	}
-	if (r + l - 4 >= 0) {
-		if (0 == m_slash[r + l - 4][l]) {
-			m_slash[r + l - 4][l] = value;
+	int sfidx = r + l - 4;
+	int scidx = (sfidx + 4 > m_boardSize - 1) ? (l - (sfidx + 4 - (m_boardSize - 1))) : l;
+	if (sfidx >= 0 && sfidx < m_slash.count()) {
+		if (0 == m_slash[sfidx][scidx]) {
+			m_slash[sfidx][scidx] = value;
 		} else {
-			qDebug() << "set slash data error!!!!!";
+			qDebug() << "set slash data error: " << r << ", col: " << l << ", sfidx: " << sfidx << ", scidx: " << scidx;
 			return false;
 		}
 	}
-	if (-(r - l - m_boardSize) - 4 >= 0) {
-		qDebug() << "7777777";
-		qDebug() << -(r - l - m_boardSize) - 4;
-		if (0 == m_backslash[-(r - l - m_boardSize) - 4][l]) {
-			qDebug() << "8888888";
-			m_backslash[-(r - l - m_boardSize) - 4][l] = value;
+	int bsidx = -(r - l - m_boardSize + 1) - 4;
+	int bcidx = (bsidx + 4 > m_boardSize - 1) ? (l - (bsidx + 4 - (m_boardSize - 1))) : l;
+	if (bsidx >= 0 && bsidx < m_backslash.count()) {
+		if (0 == m_backslash[bsidx][bcidx]) {
+			m_backslash[bsidx][bcidx] = value;
 		} else {
-			qDebug() << "set backslash data error!!!!!";
+			qDebug() << "set backslash data error: " << r << ", col: " << l << ", bsidx: " << bsidx << ", bcidx: " << bcidx;
 			return false;
 		}
 	}
@@ -364,7 +346,7 @@ bool Ai::resetData(int r, int l) {
 	if (m_row[r][l] != 0) {
 		m_row[r][l] = 0;
 	} else {
-		qDebug() << "reset row data error!!!!!";
+		qDebug() << "reset row data error: row!!!!!";
 		return false;
 	}
 	if (m_col[l][r] != 0) {
@@ -373,17 +355,21 @@ bool Ai::resetData(int r, int l) {
 		qDebug() << "reset row data error!!!!!";
 		return false;
 	}
-	if (r + l - 4 >= 0) {
-		if (m_slash[r + l - 4][l] != 0) {
-			m_slash[r + l - 4][l] = 0;
+	int sfidx = r + l - 4;
+	int scidx = (sfidx + 4 > m_boardSize - 1) ? (l - (sfidx + 4 - (m_boardSize -1))) : l;
+	if (sfidx >= 0 && sfidx < m_slash.count()) {
+		if (m_slash[sfidx][scidx] != 0) {
+			m_slash[sfidx][scidx] = 0;
 		} else {
 			qDebug() << "reset slash data error!!!!!";
 			return false;
 		}
 	}
-	if (-(r - l - m_boardSize) - 4 >= 0) {
-		if (m_backslash[-(r - l - m_boardSize) - 4][l] != 0) {
-			m_backslash[-(r - l - m_boardSize) - 4][l] = 0;
+	int bsidx = -(r - l - m_boardSize + 1) - 4;
+	int bcidx = (bsidx + 4 > m_boardSize - 1) ? (l - (bsidx + 4 - (m_boardSize - 1))) : l;
+	if (bsidx >= 0 && bsidx < m_backslash.count()) {
+		if (m_backslash[bsidx][bcidx] != 0) {
+			m_backslash[bsidx][bcidx] = 0;
 		} else {
 			qDebug() << "reset backslash data error!!!!!";
 			return false;
