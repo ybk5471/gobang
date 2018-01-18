@@ -279,18 +279,18 @@ int Ai::metaScore(bool isAi, const QList<int> & mData) const {
 		}
 	}
 
-	a1 = aresult % 100000;
-	a2 = aresult % 10000;
+	a5 = aresult % 100000;
+	a4 = aresult % 10000;
 	a3 = aresult % 1000;
-	a4 = aresult % 100;
-	a5 = aresult % 10;
-	d1 = aresult % 100000;
-	d2 = aresult % 10000;
-	d3 = aresult % 1000;
-	d4 = aresult % 100;
-	d5 = aresult % 10;
+	a2 = aresult % 100;
+	a1 = aresult % 10;
+	d5 = dresult % 100000;
+	d4 = dresult % 10000;
+	d3 = dresult % 1000;
+	d2 = dresult % 100;
+	d1 = dresult % 10;
 
-	score = a1 * 1 + a2 * 2 + a3 * 4 + a4 * 8 + a5 * 16 + d1 * 0 + d2 * 1 + d3 * 2 + d4 * 4  + d5 * 16;
+	score = a1 * 1 + a2 * 2 + a3 * 4 + a4 * 17 + a5 * 100 + d1 * 0 + d2 * 1 + d3 * 2 + d4 * 4  + d5 * 100;
 // 	qDebug() << "score: " << score;
 	return score;
 }
