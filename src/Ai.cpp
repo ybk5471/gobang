@@ -18,6 +18,7 @@ int Ai::think(bool isAi, int deep, const QList<int> & situation) {
 	//横
 	for(int r = 0; r < m_boardSize; ++r) {
 		sr.clear();
+
 		for (int l = 0; l < m_boardSize; ++l) {
 			sr.append(situation[r * m_boardSize + l]);
 		}
@@ -34,9 +35,6 @@ int Ai::think(bool isAi, int deep, const QList<int> & situation) {
 	//斜
 	for (int r =0, k = 0; k <= (m_boardSize - 1) * 2; ++k) {
 		ss.clear();
-		if (r < m_boardSize - 1) {
-			++r;
-		}
 		for (int rt  = r; rt >= 0; --rt) {
 			int l = k - rt;
 			if (l > m_boardSize - 1) {
@@ -46,6 +44,9 @@ int Ai::think(bool isAi, int deep, const QList<int> & situation) {
 		}
 		if (ss.count() >= 5) {
 			m_slash.append(ss);
+		}
+		if (r < m_boardSize - 1) {
+			++r;
 		}
 	}
 // 	for (int r = 0; r < m_boardSize; ++r) {
@@ -72,9 +73,6 @@ int Ai::think(bool isAi, int deep, const QList<int> & situation) {
 	//反斜
 	for (int r = m_boardSize - 1, k = m_boardSize - 1; k >= -(m_boardSize - 1); --k) {
 		bs.clear();
-		if (r > 0) {
-			--r;
-		}
 		for (int rt  = r; rt <= m_boardSize - 1; ++rt) {
 			int l = rt - k;
 			if (l >  m_boardSize - 1) {
@@ -84,6 +82,9 @@ int Ai::think(bool isAi, int deep, const QList<int> & situation) {
 		}
 		if (bs.count() >= 5) {
 			m_backslash.append(bs);
+		}
+		if (r > 0) {
+			--r;
 		}
 	}
 // 	for (int l = 0; l < m_boardSize; ++l) {
@@ -254,7 +255,7 @@ int Ai::metaScore(bool isAi, const QList<int> & mData) const {
 				dresult += std::pow(10, repeatValueCount - 1);
 			}
 			repeatValueCount = 0;
-		} else if (0 == mData[i] && 0 == mData[i + 1]) {
+		} else if (0 == mData[i] && i != mData.count() && 0 == mData[i + 1]) {
 			if (0 != repeatValueCount) {
 				if (i == repeatValueCount || againstValue == mData[i - repeatValueCount - 1]) {
 					dresult += std::pow(10, repeatValueCount - 1);
@@ -263,7 +264,7 @@ int Ai::metaScore(bool isAi, const QList<int> & mData) const {
 				}
 			}
 			repeatValueCount = 0;
-		} else if (0 == mData[i] && 0 != mData[i + 1]) {
+		} else if (0 == mData[i] && i != mData.count() && 0 != mData[i + 1]) {
 			for (int k = 0; k < mData.count() - i; ++i) {
 				int rv = 0;
 				if (value == mData[i + k]) {
