@@ -255,7 +255,7 @@ int Ai::metaScore(bool isAi, const QList<int> & mData) const {
 				dresult += std::pow(10, repeatValueCount - 1);
 			}
 			repeatValueCount = 0;
-		} else if (0 == mData[i] && i != mData.count() && 0 == mData[i + 1]) {
+		} else if (0 == mData[i] && i != mData.count() - 1 && 0 == mData[i + 1]) {
 			if (0 != repeatValueCount) {
 				if (i == repeatValueCount || againstValue == mData[i - repeatValueCount - 1]) {
 					dresult += std::pow(10, repeatValueCount - 1);
@@ -264,7 +264,7 @@ int Ai::metaScore(bool isAi, const QList<int> & mData) const {
 				}
 			}
 			repeatValueCount = 0;
-		} else if (0 == mData[i] && i != mData.count() && 0 != mData[i + 1]) {
+		} else if (0 == mData[i] && i != mData.count() - 1 && 0 != mData[i + 1]) {
 			for (int k = 0; k < mData.count() - i; ++i) {
 				int rv = 0;
 				if (value == mData[i + k]) {
