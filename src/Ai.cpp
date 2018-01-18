@@ -142,6 +142,7 @@ int Ai::max(bool isAi, int deep, int & score) {
 
 	if (1 == deep) {
 		score = best_score;
+		qDebug() << "best score: " << score;
 		return best_index;
 	}
 
@@ -242,56 +243,104 @@ int Ai::metaScore(bool isAi, const QList<int> & mData) const {
 	const int againstValue = isAi ? 2 : 1;
 
 	int repeatValueCount = 0;
+	int againstValueIdx = -1;
 	long aresult = 0;
 	long dresult = 0;
 
-	int a1 = 0, a2 = 0, a3 = 0, a4 = 0, a5 = 0, d1 = 0, d2 = 0, d3 = 0, d4 = 0, d5 = 0;
+// 	int a1 = 0, a2 = 0, a3 = 0, a4 = 0, a5 = 0, d1 = 0, d2 = 0, d3 = 0, d4 = 0;
 
-	for (int i = 0; i < mData.count(); ++i) {
+	for (int i = 0; i < mData.count() - 1; ) {
+		if (mData.count() - againstValueIdx - 1 < 5) {
+			break;
+		}
 		if (value == mData[i]) {
 			repeatValueCount += 1;
-		} else if (againstValue == mData[i]) {
-			if (0 != repeatValueCount && 0 != i && 0 == mData[i - repeatValueCount - 1]) {
+			++i;
+			if (5 == repeatValueCount) {
+				aresult += std::pow(10, repeatValueCount - 1);
+				repeatValueCount = 0;
+			}
+			continue;
+		}
+		if (againstValue == mData[i]) {
+			if (0 != repeatValueCount && i - againstValueIdx - 1 >=5) {
+// 				qDebug() << "arepeatValueCount: " << repeatValueCount;
 				dresult += std::pow(10, repeatValueCount - 1);
 			}
+			againstValueIdx = i;
+			++i;
 			repeatValueCount = 0;
-		} else if (0 == mData[i] && i != mData.count() - 1 && 0 == mData[i + 1]) {
-			if (0 != repeatValueCount) {
-				if (i == repeatValueCount || againstValue == mData[i - repeatValueCount - 1]) {
+			continue;
+		}
+		if (0 == mData[i]) {
+			int secAgainstValueIdx = mData.count();
+			for (int k = 1; k < mData.count() - i - 1; ++k) {
+				if (againstValue == mData[i + k]) {
+					secAgainstValueIdx = i + k;
+				}
+			}
+			if (0 != repeatValueCount && secAgainstValueIdx - againstValueIdx - 1 >= 5) {
+				if (i - againstValueIdx - 1  == repeatValueCount) {
 					dresult += std::pow(10, repeatValueCount - 1);
-				} else if (0 == mData[i - repeatValueCount - 1]) {
+				} else {
 					aresult += std::pow(10, repeatValueCount - 1);
 				}
 			}
-			repeatValueCount = 0;
-		} else if (0 == mData[i] && i != mData.count() - 1 && 0 != mData[i + 1]) {
-			for (int k = 0; k < mData.count() - i; ++i) {
-				int rv = 0;
-				if (value == mData[i + k]) {
-					++rv;
-				} else if (againstValue == mData[i + k]) {
-					break;
-				} else if (0 == mData[i + k]) {
-					dresult += std::pow(10, rv - 1);
-					break;
-				}
+			if (repeatValueCount > 3) {
+				qDebug() << "zrepeatValueCount: " << repeatValueCount;
 			}
+			++i;
+			repeatValueCount = 0;
+			continue;
 		}
+// 		if (0 == mData[i] && i != mData.count() - 1 && 0 != mData[i + 1]) {
+// 			int secAgainstValueIdx = mData.count();
+// 			bool extra = false;
+// 			int extraScore = 0;
+// 			for (int k = 1; k < mData.count() - i - 1; ++k) {
+// 				int rv = 0;
+// 				if (value == mData[i + k]) {
+// 					++rv;
+// 				} else if (againstValue == mData[i + k]) {
+// 					secAgainstValueIdx = i + k;
+// 					break;
+// 				} else if (i + k == mData.count() - 1) {
+// 					break;
+// 				} else if (0 == mData[i + k]) {
+// 					extraScore = std::pow(10, rv - 1);
+// 					break;
+// 				}
+// 			}
+// 			if (0 != repeatValueCount && secAgainstValueIdx - againstValueIdx - 1 >= 5) {
+// 				if (i - againstValueIdx - 1  == repeatValueCount) {
+// 					dresult = std::pow(10, repeatValueCount - 1);
+// 				} else {
+// 					aresult = std::pow(10, repeatValueCount - 1);
+// 					extra = true;
+// 				}
+// 			}
+// 			if (extra && extraScore) {}
+// 			++i;
+// 			repeatValueCount = 0;
+// 			continue;
+// 		}
 	}
 
-	a5 = aresult % 100000;
-	a4 = aresult % 10000;
-	a3 = aresult % 1000;
-	a2 = aresult % 100;
-	a1 = aresult % 10;
-	d5 = dresult % 100000;
-	d4 = dresult % 10000;
-	d3 = dresult % 1000;
-	d2 = dresult % 100;
-	d1 = dresult % 10;
+// 	qDebug() << "aresult: " << aresult;
+// 	qDebug() << "dresult: " << dresult;
 
-	score = a1 * 1 + a2 * 2 + a3 * 4 + a4 * 17 + a5 * 100 + d1 * 0 + d2 * 1 + d3 * 2 + d4 * 4  + d5 * 100;
-// 	qDebug() << "score: " << score;
+// 	a5 = aresult % 100000;
+// 	a4 = aresult % 10000;
+// 	a3 = aresult % 1000;
+// 	a2 = aresult % 100;
+// 	a1 = aresult % 10;
+// 	d4 = dresult % 10000;
+// 	d3 = dresult % 1000;
+// 	d2 = dresult % 100;
+// 	d1 = dresult % 10;
+
+// 	score = a1 * 1 + a2 * 2 + a3 * 4 + a4 * 500 + a5 * 1000 + d1 * 0 + d2 * 1 + d3 * 2 + d4 * 4;
+	score = aresult + dresult / 10;
 	return score;
 }
 
