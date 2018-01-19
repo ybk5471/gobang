@@ -15,6 +15,9 @@ ApplicationWindow {
 	property int undoTimes: 10
 	property int hintTimes: 10
 
+	readonly property int aiValue: 1
+	readonly property int huValue: 2
+
 	QtObject {
 		id: uiCfg
 		property int boardSize: 15
@@ -69,7 +72,10 @@ ApplicationWindow {
 			chessmanV:	chessmanv
 			buttonV:	isRunning
 			onTriggered: {
+				setCurrentIndex(index)
 				genClr()
+				increaseOrder()
+				refreshAi()
 				if (!isAi) {
 					aiPlay()
 				}
@@ -77,8 +83,6 @@ ApplicationWindow {
 
 			function genClr() {
 				changeUser()
-				order.push(index)
-				++orderLength
 				if (isAi) {
 					chessmanC = "black"
 					user = "ai"
@@ -98,9 +102,9 @@ ApplicationWindow {
 			if ("null" == ele.user) {
 				tmp.push(0)
 			} else if ("ai" == ele.user) {
-				tmp.push(1)
+				tmp.push(aiValue)
 			} else {
-				tmp.push(2)
+				tmp.push(huValue)
 			}
 		}
 		return tmp
@@ -108,18 +112,24 @@ ApplicationWindow {
 
 	function aiPlay() {
 		Ai.boardSize = uiCfg.boardSize
-		var bestIdx = Ai.think(!isAi, 2, situation)
+		var bestIdx = Ai.think(!isAi, 2)
 		aiChess(parseInt(bestIdx / uiCfg.boardSize), bestIdx % uiCfg.boardSize)
 	}
 
+	function setCurrentIndex(index) {
+		board.currentIndex = index
+	}
+
 	function aiChess(r, l) {
-		board.currentIndex = r * uiCfg.boardSize + l
+		setCurrentIndex(r * uiCfg.boardSize + l)
 		board.currentItem.click()
 	}
+
 
 	function go() {
 		isRunning = true
 		initBoard()
+		initAi()
 		aiChess(parseInt(uiCfg.boardSize / 2), parseInt(uiCfg.boardSize / 2))
 	}
 
@@ -128,12 +138,22 @@ ApplicationWindow {
 		/// give hint
 	}
 
+	function increaseOrder() {
+		order.push(board.currentIndex)
+		++orderLength
+	}
+
+	function reduceOrder() {
+		var lastIdx = order.pop()
+		--orderLength
+		return lastIdx
+	}
+
 	function undoLast() {
 		--undoTimes
-		var lastIdx = order.pop()
+		var lastIdx = reduceOrder()
 		myModel.setProperty(lastIdx, "user", "null")
 		myModel.setProperty(lastIdx, "chessmanv", false)
-		--orderLength
 		changeUser()
 	}
 
@@ -170,6 +190,19 @@ ApplicationWindow {
 			     && ((r == centerIdx) || (r == centerIdx - 4) || (r == centerIdx + 4)) ) {
 				myModel.setProperty(r * uiCfg.boardSize + l, "centerv", true)
 			}
+	}
+
+	function initAi() {
+		Ai.boardSize = uiCfg.boardSize
+		Ai.aiValue = aiValue
+		Ai.huValue = huValue
+		Ai.init(situation)
+	}
+
+	function refreshAi() {
+		var user = myModel.get(board.currentIndex).user
+		var isAiValue = ("ai" == myModel.get(board.currentIndex).user)
+		Ai.refresh(board.currentIndex, isAiValue)
 	}
 
 	Component.onCompleted: {
