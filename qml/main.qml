@@ -202,7 +202,7 @@ ApplicationWindow {
 	function refreshAi() {
 		var user = myModel.get(board.currentIndex).user
 		var isAiValue = ("ai" == myModel.get(board.currentIndex).user)
-		Ai.refresh(board.currentIndex, isAiValue)
+		Ai.refresh(isAiValue, board.currentIndex)
 	}
 
 	Component.onCompleted: {

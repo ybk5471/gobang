@@ -11,7 +11,6 @@ int Ai::think(bool isAi, int deep) {
 	int best_idx = -1;
 	int best_score;
 	best_idx = max(isAi, deep, best_score);
-	qDebug() << best_idx;
 
 	return best_idx;
 }
@@ -77,10 +76,10 @@ void Ai::init(const QList<int> & situation) {
 		}
 	}
 }
-void Ai::refresh(int index, bool isAiValue) {
+void Ai::refresh(bool isAiValue, int index) {
 	int r = index / m_boardSize;
 	int l = index % m_boardSize;
-	setData(r, l, isAiValue);
+	setData(isAiValue, r, l);
 }
 // 自己得分最大化
 int Ai::max(bool isAi, int deep, int & score) {
@@ -90,15 +89,12 @@ int Ai::max(bool isAi, int deep, int & score) {
 	int maxAddedScore = -1;
 	for (int r = 0; r < m_boardSize; ++r) {
 		for (int l = 0; l < m_boardSize; ++l) {
-			qDebug() << "scene: ";
 			int sceneScore = calScore(isAi, r, l);
 			if (!setData(isAi, r, l)) {
 				continue;
 			}
-			qDebug() << "new: ";
 			int newScore = calScore(isAi, r, l);
 			int addedScore = newScore - sceneScore;
-			qDebug() << r << ", " << l << "addedScore: "  << addedScore;
 			if (maxAddedScore < addedScore) {
 				max_best_idx_list.clear();
 				maxAddedScore = addedScore;
@@ -200,18 +196,14 @@ int Ai::min(bool isAi, int deep, int & score) {
 int Ai::calScore(bool isAi, int r, int l) const {
 	int score = 0;
 	score += metaScore(isAi, m_row[r]);
-	qDebug() << "m: " << score;
 	score += metaScore(isAi, m_col[l]);
-	qDebug() << "c: " << score;
 	int sFirIdx = __toSFirIdx(r, l);
 	if (sFirIdx >= 0 && sFirIdx < m_slash.count()) {
 		score += metaScore(isAi, m_slash[sFirIdx]);
-		qDebug() << "s: " << score;
 	}
 	int bFirIdx = __toBFirIdx(r, l);
 	if (bFirIdx >= 0 && bFirIdx < m_backslash.count()) {
 		score += metaScore(isAi, m_backslash[bFirIdx]);
-		qDebug() << "b: " << score;
 	}
 	return score;
 }
@@ -300,12 +292,10 @@ int Ai::metaScore(bool isAi, const QList<int> & mData) const {
 }
 
 bool Ai::setData(bool isAi, int r, int l) {
-	qDebug() << r << ", " << l;
 	int value = isAi ? m_aiValue : m_huValue;
 	if (0 == m_situation[r * m_boardSize + l]) {
 		m_situation[r * m_boardSize + l] = value;
 	} else {
-		qDebug() << r << ", " << l << ", is not error";
 		return false;
 	}
 	if (0 == m_row[r][l]) {
@@ -313,13 +303,11 @@ bool Ai::setData(bool isAi, int r, int l) {
 	} else {
 		return false;
 	}
-	qDebug() << "old value: " << m_col[r][l];
 	if (0 == m_col[l][r]) {
 		m_col[l][r] = value;
 	} else {
 		return false;
 	}
-	qDebug() << "new value: " << m_col[r][l];
 	int sfidx = __toSFirIdx(r, l);
 	int scidx = __toSSecIdx(r, l);
 	if (sfidx >= 0 && sfidx < m_slash.count()) {

@@ -15,7 +15,7 @@ public:
 
 	Q_INVOKABLE int think(bool isAi, int deep);
 	Q_INVOKABLE void init(const QList<int> & situation);
-	Q_INVOKABLE void refresh(int index, bool isAiValue);
+	Q_INVOKABLE void refresh(bool isAiValue, int index);
 
 private:
 	int max(bool isAi, int deep, int & score);
