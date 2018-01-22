@@ -1,5 +1,6 @@
 #include <cmath>
 #include <QDebug>
+#include <limits>
 #include "../include/Ai.hpp"
 
 Ai::Ai(QObject * parent) : QObject(parent) {}
@@ -11,6 +12,7 @@ int Ai::think(bool isAi, int deep) {
 	int best_idx = -1;
 	int best_score;
 	best_idx = max(isAi, deep, best_score);
+	qDebug() << "best_score: " << best_score;
 
 	return best_idx;
 }
@@ -89,12 +91,20 @@ int Ai::max(bool isAi, int deep, int & score) {
 	int maxAddedScore = -1;
 	for (int r = 0; r < m_boardSize; ++r) {
 		for (int l = 0; l < m_boardSize; ++l) {
-			int sceneScore = calScore(isAi, r, l);
+			int huSceneScore = calScore(!isAi, r, l);
+			int aiSceneScore = calScore(isAi, r, l);
 			if (!setData(isAi, r, l)) {
 				continue;
 			}
-			int newScore = calScore(isAi, r, l);
-			int addedScore = newScore - sceneScore;
+			int huNewScore = calScore(!isAi, r, l);
+			if (huSceneScore - huNewScore >= 90) {
+				qDebug() << "hu score diff: " << huSceneScore - huNewScore;
+				bestIndex = r * m_boardSize + l;
+				score = huSceneScore - huNewScore;
+				return bestIndex;
+			}
+			int aiNewScore = calScore(isAi, r, l);
+			int addedScore = aiNewScore - aiSceneScore;
 			if (maxAddedScore < addedScore) {
 				max_best_idx_list.clear();
 				maxAddedScore = addedScore;
@@ -135,7 +145,6 @@ int Ai::max(bool isAi, int deep, int & score) {
 	} else {
 		return min_score_index;
 	}
-
 }
 //对手得分最小化
 int Ai::min(bool isAi, int deep, int & score) {
@@ -145,12 +154,19 @@ int Ai::min(bool isAi, int deep, int & score) {
 	int minAddedScore = 10000;
 	for (int r = 0; r < m_boardSize; ++r) {
 		for (int l = 0; l < m_boardSize; ++l) {
-			int sceneScore = calScore(!isAi, r, l);
+			int aiSceneScore = calScore(isAi, r, l);
+			int huSceneScore = calScore(!isAi, r, l);
 			if (!setData(!isAi, r, l)) {
 				continue;
 			}
-			int newScore = calScore(!isAi, r, l);
-			int addedScore = newScore - sceneScore;
+			int aiNewScore = calScore(isAi, r, l);
+			if (aiSceneScore - aiNewScore >= 90) {
+				minAddedScore = aiSceneScore - aiNewScore;
+				bestIndex = r * m_boardSize + l;
+				return bestIndex;
+			}
+			int huNewScore = calScore(!isAi, r, l);
+			int addedScore = huNewScore - huSceneScore;
 			if (addedScore < minAddedScore) {
 				min_best_idx_list.clear();
 				minAddedScore = addedScore;
@@ -215,8 +231,8 @@ int Ai::metaScore(bool isAi, const QList<int> & mData) const {
 
 	int repeatValueCount = 0;
 	int againstValueIdx = -1;
-	long aresult = 0;
-	long dresult = 0;
+	int aresult = 0;
+	int dresult = 0;
 
 	for (int i = 0; i < mData.count() - 1; ++i) {
 		if (mData.count() - againstValueIdx - 1 < 5) {
@@ -225,6 +241,7 @@ int Ai::metaScore(bool isAi, const QList<int> & mData) const {
 		if (value == mData[i]) {
 			repeatValueCount += 1;
 			if (5 == repeatValueCount) {
+				qDebug() << "repeatValueCount: " << repeatValueCount;
 				aresult += std::pow(10, repeatValueCount - 1);
 				repeatValueCount = 0;
 			}
