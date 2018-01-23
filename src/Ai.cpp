@@ -1,6 +1,5 @@
 #include <cmath>
 #include <QDebug>
-#include <limits>
 #include "../include/Ai.hpp"
 
 Ai::Ai(QObject * parent) : QObject(parent) {}
@@ -12,7 +11,6 @@ int Ai::think(bool isAi, int deep) {
 	int best_idx = -1;
 	int best_score;
 	best_idx = max(isAi, deep, best_score);
-	qDebug() << "best_score: " << best_score;
 
 	return best_idx;
 }
@@ -89,6 +87,7 @@ int Ai::max(bool isAi, int deep, int & score) {
 	QList<int> max_best_idx_list;
 	int bestIndex = -1;
 	int maxAddedScore = -1;
+	bool needDefense = false;
 	for (int r = 0; r < m_boardSize; ++r) {
 		for (int l = 0; l < m_boardSize; ++l) {
 			int huSceneScore = calScore(!isAi, r, l);
@@ -96,15 +95,24 @@ int Ai::max(bool isAi, int deep, int & score) {
 			if (!setData(isAi, r, l)) {
 				continue;
 			}
-			int huNewScore = calScore(!isAi, r, l);
-			if (huSceneScore - huNewScore >= 90) {
-				qDebug() << "hu score diff: " << huSceneScore - huNewScore;
-				bestIndex = r * m_boardSize + l;
-				score = huSceneScore - huNewScore;
-				return bestIndex;
-			}
 			int aiNewScore = calScore(isAi, r, l);
 			int addedScore = aiNewScore - aiSceneScore;
+			if (addedScore >= 9000) {
+				bestIndex = r * m_boardSize + l;
+				score = addedScore;
+				resetData(r, l);
+				return bestIndex;
+			}
+			int huNewScore = calScore(!isAi, r, l);
+			if (huSceneScore - huNewScore >= 90) {
+				bestIndex = r * m_boardSize + l;
+				maxAddedScore = huSceneScore - huNewScore;
+				needDefense = true;
+			}
+			if (needDefense) {
+				resetData(r, l);
+				continue;
+			}
 			if (maxAddedScore < addedScore) {
 				max_best_idx_list.clear();
 				maxAddedScore = addedScore;
@@ -121,10 +129,10 @@ int Ai::max(bool isAi, int deep, int & score) {
 		return bestIndex;
 	}
 
-	int minAddedScore = 10000;
-	int mscore;
-	int min_score_index = -1;
 	if (max_best_idx_list.count() != 0) {
+		int minAddedScore = 10000;
+		int mscore;
+		int min_score_index = -1;
 		for (int i = 0; i < max_best_idx_list.count(); ++i) {
 			int r = max_best_idx_list[i] / m_boardSize;
 			int l = max_best_idx_list[i] % m_boardSize;
@@ -136,14 +144,16 @@ int Ai::max(bool isAi, int deep, int & score) {
 			}
 			resetData(r, l);
 		}
-	}
-	setData(isAi, bestIndex / m_boardSize, bestIndex % m_boardSize);
-	min(isAi, deep, mscore);
-	resetData(bestIndex / m_boardSize, bestIndex % m_boardSize);
-	if (mscore < minAddedScore) {
-		return bestIndex;
+		setData(isAi, bestIndex / m_boardSize, bestIndex % m_boardSize);
+		min(isAi, deep, mscore);
+		resetData(bestIndex / m_boardSize, bestIndex % m_boardSize);
+		if (mscore < minAddedScore) {
+			return bestIndex;
+		} else {
+			return min_score_index;
+		}
 	} else {
-		return min_score_index;
+		return bestIndex;
 	}
 }
 //对手得分最小化
@@ -152,6 +162,7 @@ int Ai::min(bool isAi, int deep, int & score) {
 	QList<int> min_best_idx_list;
 	int bestIndex = -1;
 	int minAddedScore = 10000;
+	bool needDefense = false;
 	for (int r = 0; r < m_boardSize; ++r) {
 		for (int l = 0; l < m_boardSize; ++l) {
 			int aiSceneScore = calScore(isAi, r, l);
@@ -160,13 +171,23 @@ int Ai::min(bool isAi, int deep, int & score) {
 				continue;
 			}
 			int aiNewScore = calScore(isAi, r, l);
+			int huNewScore = calScore(!isAi, r, l);
+			int addedScore = huNewScore - huSceneScore;
+			if (addedScore >= 9000) {
+				score = addedScore;
+				bestIndex = r * m_boardSize + l;
+				resetData(r, l);
+				return bestIndex;
+			}
 			if (aiSceneScore - aiNewScore >= 90) {
 				minAddedScore = aiSceneScore - aiNewScore;
 				bestIndex = r * m_boardSize + l;
-				return bestIndex;
+				needDefense = true;
 			}
-			int huNewScore = calScore(!isAi, r, l);
-			int addedScore = huNewScore - huSceneScore;
+			if (needDefense) {
+				resetData(r, l);
+				continue;
+			}
 			if (addedScore < minAddedScore) {
 				min_best_idx_list.clear();
 				minAddedScore = addedScore;
@@ -182,11 +203,10 @@ int Ai::min(bool isAi, int deep, int & score) {
 	if (1 == deep) {
 		return bestIndex;
 	}
-
-	int maxAddedscore = -1;
-	int mscore;
-	int max_score_index = -1;
 	if (min_best_idx_list.count() != 0) {
+		int maxAddedscore = -1;
+		int mscore;
+		int max_score_index = -1;
 		for (int i = 0; i < min_best_idx_list.count(); ++i) {
 			int r = min_best_idx_list[i] / m_boardSize;
 			int l = min_best_idx_list[i] % m_boardSize;
@@ -198,14 +218,16 @@ int Ai::min(bool isAi, int deep, int & score) {
 			}
 			resetData(r, l);
 		}
-	}
-	setData(!isAi, bestIndex / m_boardSize, bestIndex % m_boardSize);
-	max(isAi, deep, mscore);
-	resetData(bestIndex / m_boardSize, bestIndex % m_boardSize);
-	if (mscore > maxAddedscore) {
-		return bestIndex;
+		setData(!isAi, bestIndex / m_boardSize, bestIndex % m_boardSize);
+		max(isAi, deep, mscore);
+		resetData(bestIndex / m_boardSize, bestIndex % m_boardSize);
+		if (mscore > maxAddedscore) {
+			return bestIndex;
+		} else {
+			return max_score_index;
+		}
 	} else {
-		return max_score_index;
+		return bestIndex;
 	}
 }
 
@@ -241,7 +263,6 @@ int Ai::metaScore(bool isAi, const QList<int> & mData) const {
 		if (value == mData[i]) {
 			repeatValueCount += 1;
 			if (5 == repeatValueCount) {
-				qDebug() << "repeatValueCount: " << repeatValueCount;
 				aresult += std::pow(10, repeatValueCount - 1);
 				repeatValueCount = 0;
 			}
